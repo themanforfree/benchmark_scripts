@@ -1,19 +1,30 @@
 #!/bin/bash
 source $(dirname $0)/config.sh
-LOCAL_IP=$(curl -s ifconfig.me)
+LOCAL_IP=$(curl -s ip.sb)
 LOG_FOLDER=${WORK_DIR}/logs_$(date +%s)
 SCHEME="http"
 ENDPOINTS="${SCHEME}://${SERVERS[1]}:2379,${SCHEME}://${SERVERS[2]}:2379,${SCHEME}://${SERVERS[3]}:2379"
-NODE1="${SCHEME}://${SERVERS[1]}:2379"
+LEADER="${SCHEME}://${SERVERS[1]}:2379"
+LOCAL="${SCHEME}://${LOCAL_IP}:2379"
 TEST_CASE=(
     ""
-    "${BENCHMARK_BIN} --endpoints=${NODE1} --target-leader --conns=1 --clients=1 put --key-size=8 --sequential-keys --total=10000 --val-size=256"
-    "${BENCHMARK_BIN} --endpoints=${NODE1} --target-leader --conns=100 --clients=1000 put --key-size=8 --sequential-keys --total=100000 --val-size=256"
-    "${BENCHMARK_BIN} --endpoints=${ENDPOINTS} --conns=100 --clients=1000 put --key-size=8 --sequential-keys --total=100000 --val-size=256"
-    "${BENCHMARK_BIN} --endpoints=${ENDPOINTS} --conns=1 --clients=1 range YOUR_KEY --consistency=l --total=10000"
-    "${BENCHMARK_BIN} --endpoints=${ENDPOINTS} --conns=1 --clients=1 range YOUR_KEY --consistency=s --total=10000"
-    "${BENCHMARK_BIN} --endpoints=${ENDPOINTS} --conns=100 --clients=1000 range YOUR_KEY --consistency=l --total=100000"
-    "${BENCHMARK_BIN} --endpoints=${ENDPOINTS} --conns=100 --clients=1000 range YOUR_KEY --consistency=s --total=100000"
+
+    # 1 ~ 6
+    "${BENCHMARK_BIN} --endpoints=${LOCAL} --conns=1 --clients=1 put --key-size=8 --total=1000 --val-size=256"
+    "${BENCHMARK_BIN} --endpoints=${LOCAL} --conns=10 --clients=10 put --key-size=8 --total=1000 --val-size=256"
+    "${BENCHMARK_BIN} --endpoints=${LOCAL} --conns=50 --clients=50 put --key-size=8 --total=1000 --val-size=256"
+    "${BENCHMARK_BIN} --endpoints=${LOCAL} --conns=100 --clients=100 put --key-size=8 --total=1000 --val-size=256"
+    "${BENCHMARK_BIN} --endpoints=${LOCAL} --conns=200 --clients=200 put --key-size=8 --total=1000 --val-size=256"
+    "${BENCHMARK_BIN} --endpoints=${LOCAL} --conns=1000 --clients=1000 put --key-size=8 --total=1000 --val-size=256"
+
+    # 7 ~ 12
+    "${BENCHMARK_BIN} --endpoints=${LOCAL} --conns=1 --clients=1 put --key-size=8 --key-space-size=100000 --total=1000 --val-size=256"
+    "${BENCHMARK_BIN} --endpoints=${LOCAL} --conns=10 --clients=10 put --key-size=8 --key-space-size=100000 --total=1000 --val-size=256"
+    "${BENCHMARK_BIN} --endpoints=${LOCAL} --conns=50 --clients=50 put --key-size=8 --key-space-size=100000 --total=1000 --val-size=256"
+    "${BENCHMARK_BIN} --endpoints=${LOCAL} --conns=100 --clients=100 put --key-size=8 --key-space-size=100000 --total=1000 --val-size=256"
+    "${BENCHMARK_BIN} --endpoints=${LOCAL} --conns=200 --clients=200 put --key-size=8 --key-space-size=100000 --total=1000 --val-size=256"
+    "${BENCHMARK_BIN} --endpoints=${LOCAL} --conns=1000 --clients=1000 put --key-size=8 --key-space-size=100000 --total=1000 --val-size=256"
+
 )
 
 push() {
@@ -24,7 +35,11 @@ push() {
 
 test() {
     push "Running test$1 ..."
-    ${TEST_CASE[$1]} >${LOG_FOLDER}/t$1.log
+    ./stop_all.sh
+    ./run_xline_cluster.sh
+    sleep 1
+    echo ${TEST_CASE[$1]} >${LOG_FOLDER}/t$1.log
+    ${TEST_CASE[$1]} >>${LOG_FOLDER}/t$1.log
     if [ $? -eq 0 ]; then
         push "Test$1 finished successfully"
     else
@@ -36,15 +51,17 @@ case $# in
 0)
     mkdir ${LOG_FOLDER}
     push "benchmark start at $(TZ=UTC-8 date +%H:%M:%S) on ${LOCAL_IP}"
-    for i in $(seq 1 7); do
+    for i in $(seq 1 12); do
         test $i
     done
+    ./stop_all.sh
     push "benchmark done at $(TZ=UTC-8 date +%H:%M:%S)"
     ;;
 1)
     mkdir ${LOG_FOLDER}
     push "benchmark start at $(TZ=UTC-8 date +%H:%M:%S) on ${LOCAL_IP}"
     test $1
+    ./stop_all.sh
     push "benchmark done at $(TZ=UTC-8 date +%H:%M:%S)"
     ;;
 2)
@@ -53,6 +70,7 @@ case $# in
     for i in $(seq $1 $2); do
         test $i
     done
+    ./stop_all.sh
     push "benchmark done at $(TZ=UTC-8 date +%H:%M:%S)"
     ;;
 *)

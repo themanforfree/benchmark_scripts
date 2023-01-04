@@ -1,0 +1,22 @@
+SERVERS=(
+    ""
+    "3.101.43.65"
+    "3.90.248.53"
+    "13.212.179.42"
+)
+
+PASSPHRASE="xlinetest1!"
+
+KEY_PATH="/home/ubuntu/id_rsa"
+
+TOKEN="5337166781:AAFPUtnvzXLdfOMbu6TYvlo697XJSCppP9M"
+
+CHAT_ID="460452140"
+
+WORK_DIR="/home/ubuntu"
+
+BENCHMARK_BIN="/home/ubuntu/benchmark"
+
+ETCD_BIN="etcd"
+
+XLINE_BIN="/home/ubuntu/xline"

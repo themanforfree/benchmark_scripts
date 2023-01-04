@@ -1,16 +1,5 @@
 #!/bin/bash
-if [ $# -ne 1 ]; then
-    echo "Empty argument"
-    exit 1
-fi
-
-if [ $1 -gt 3 -o $1 -lt 1 ]; then
-    echo "Wrong argument"
-    exit 1
-fi
-
 source $(dirname $0)/config.sh
-
 SCREEN_NAME="xline"
 NAME="xline"$1
 CLUSTER_PEERS=(
@@ -27,7 +16,7 @@ LEADER="${SERVERS[1]}:2380"
 CMD="${XLINE_BIN} \
     --name ${NAME} \
     --cluster-peers ${CLUSTER_PEERS[$1]} \
-    --self-ip-port 0.0.0.0:2380 \
+    --self-ip-port ${SERVERS[$1]}:2380 \
     --ip-port 0.0.0.0:2379 \
     --leader-ip-port ${LEADER}"
 

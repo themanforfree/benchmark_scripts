@@ -29,7 +29,9 @@ CMD="${ETCD_BIN} --name ${NAME} \
     --heartbeat-interval 200 \
     --election-timeout 2000"
 
-screen -S $SCREEN_NAME -X quit >/dev/null 2>&1
-screen -dmS $SCREEN_NAME
+# screen -S $SCREEN_NAME -X quit >/dev/null 2>&1
+# screen -dmS $SCREEN_NAME
 
-screen -x -S $SCREEN_NAME -p 0 -X stuff "${CMD}\n"
+# screen -x -S $SCREEN_NAME -p 0 -X stuff "${CMD}\n"
+
+echo ${CMD}
